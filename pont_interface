@@ -1,0 +1,193 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+
+PORT = 8080
+
+etat = {
+    "micro": "PRÊT",
+    "lumiere": "ÉTEINTE",
+    "musique": "ARRÊTÉE",
+    "ventilateur": "ARRÊTÉ",
+    "securite": "NORMALE"
+}
+
+
+class PontHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+
+        if self.path == "/etat":
+
+            self.envoyer_json(etat)
+
+        else:
+
+            self.send_response(404)
+            self.end_headers()
+
+
+    def do_POST(self):
+
+        if self.path == "/etat":
+
+            try:
+
+                longueur = int(
+                    self.headers.get(
+                        "Content-Length",
+                        0
+                    )
+                )
+
+                contenu = self.rfile.read(
+                    longueur
+                )
+
+                nouvelles_donnees = json.loads(
+                    contenu.decode("utf-8")
+                )
+
+                for nom, valeur in nouvelles_donnees.items():
+
+                    if nom in etat:
+
+                        etat[nom] = valeur
+
+
+                print(
+                    "INTERFACE ←",
+                    nouvelles_donnees
+                )
+
+                self.envoyer_json(
+                    {
+                        "ok": True,
+                        "etat": etat
+                    }
+                )
+
+
+            except Exception as erreur:
+
+                print(
+                    "ERREUR RECEPTION INTERFACE :",
+                    erreur
+                )
+
+                self.send_response(400)
+
+                self.send_header(
+                    "Content-Type",
+                    "application/json; charset=utf-8"
+                )
+
+                self.send_header(
+                    "Access-Control-Allow-Origin",
+                    "*"
+                )
+
+                self.end_headers()
+
+                self.wfile.write(
+                    json.dumps(
+                        {
+                            "ok": False,
+                            "erreur": str(erreur)
+                        },
+                        ensure_ascii=False
+                    ).encode("utf-8")
+                )
+
+        else:
+
+            self.send_response(404)
+            self.end_headers()
+
+
+    def do_OPTIONS(self):
+
+        self.send_response(200)
+
+        self.send_header(
+            "Access-Control-Allow-Origin",
+            "*"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        )
+
+        self.end_headers()
+
+
+    def envoyer_json(self, donnees):
+
+        self.send_response(200)
+
+        self.send_header(
+            "Content-Type",
+            "application/json; charset=utf-8"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Origin",
+            "*"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        )
+
+        self.end_headers()
+
+        self.wfile.write(
+            json.dumps(
+                donnees,
+                ensure_ascii=False
+            ).encode("utf-8")
+        )
+
+
+    def log_message(self, format, *args):
+
+        return
+
+
+serveur = HTTPServer(
+    ("0.0.0.0", PORT),
+    PontHandler
+)
+
+
+print("========================================")
+print(" PONT INTERFACE ORACLE")
+print("========================================")
+print("Serveur lancé sur le port 8080")
+print("État : http://192.168.1.15:8080/etat")
+print("Réception POST : http://192.168.1.15:8080/etat")
+print("Ctrl+C pour arrêter.")
+print()
+
+
+try:
+
+    serveur.serve_forever()
+
+except KeyboardInterrupt:
+
+    print()
+    print("Pont arrêté.")
+
+    serveur.server_close()

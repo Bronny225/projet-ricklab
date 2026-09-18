@@ -1,0 +1,3566 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Oracle du RickLab — Interface</title>
+
+    <style>
+        :root {
+            --bg: #05070d;
+            --glow: #3fd0ff;
+            --face: #04070e;
+            --glint: #eaf9ff;
+            --caption: #8aa8bd;
+            --portal: #7dfb6b;
+            --danger: #ff5d5d;
+            --panel: #0b1220cc;
+            --arrow-off: #1c2740;
+            --arrow-on: #eaf9ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 50% 42%,
+                    #0d1626 0%,
+                    var(--bg) 62%);
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            overflow: hidden;
+
+            font-family:
+                "Inter",
+                "Helvetica Neue",
+                Arial,
+                sans-serif;
+
+            color: var(--caption);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 55px;
+            padding: 40px;
+        }
+
+        .avatar-corner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 360px;
+        }
+
+        .stage {
+            width: min(74vmin, 420px);
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        #face {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+            overflow: visible;
+
+            filter:
+                drop-shadow(0 0 40px color-mix(in srgb,
+                        var(--glow) 40%,
+                        transparent));
+
+            transition:
+                filter 0.6s ease,
+                transform 0.2s ease;
+        }
+
+        .caption {
+            min-height: 2.8em;
+            width: 360px;
+
+            font-size: 15px;
+            letter-spacing: 0.01em;
+
+            text-align: center;
+            line-height: 1.5;
+
+            opacity: 0.9;
+
+            transition:
+                opacity 0.4s ease,
+                color 0.6s ease;
+
+            word-wrap: break-word;
+        }
+
+        .caption.is-quiet {
+            opacity: 0.35;
+        }
+
+        .system-panel {
+            width: 300px;
+            min-width: 280px;
+
+            padding: 22px;
+
+            background:
+                linear-gradient(145deg,
+                    rgba(11, 18, 32, 0.92),
+                    rgba(5, 9, 18, 0.78));
+
+            border:
+                1px solid rgba(63, 208, 255, 0.25);
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 0 30px rgba(63, 208, 255, 0.08),
+
+                inset 0 0 25px rgba(63, 208, 255, 0.03);
+
+            backdrop-filter: blur(12px);
+        }
+
+        .system-title {
+            margin:
+                0 0 18px 0;
+
+            color: #eaf9ff;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .system-main-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+
+            border-bottom:
+                1px solid rgba(138, 168, 189, 0.12);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+
+            flex-shrink: 0;
+            border-radius: 50%;
+
+            background: #3fd0ff;
+
+            box-shadow:
+                0 0 12px #3fd0ff;
+        }
+
+        .status-dot.green {
+            background: #41f2b0;
+
+            box-shadow:
+                0 0 12px #41f2b0;
+        }
+
+        .status-dot.purple {
+            background: #9a7bff;
+
+            box-shadow:
+                0 0 12px #9a7bff;
+        }
+
+        .status-dot.red {
+            background: #ff5d5d;
+
+            box-shadow:
+                0 0 12px #ff5d5d;
+        }
+
+        .status-dot.off {
+            background: #344055;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        #systemStatus {
+            color: #eaf9ff;
+
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .device-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 10px 12px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.025);
+        }
+
+        .device-name {
+            font-size: 13px;
+            color: #8aa8bd;
+        }
+
+        .device-state {
+            font-size: 12px;
+            font-weight: 600;
+
+            color: #64758c;
+
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .device-state.on {
+            color: #41f2b0;
+        }
+
+        .device-state.danger {
+            color: #ff5d5d;
+        }
+
+        .device-state.active {
+            color: #3fd0ff;
+        }
+
+        .game {
+            width: 520px;
+            min-height: 500px;
+
+            display: none;
+
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game.active {
+            display: flex;
+        }
+
+        .hud {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 20px;
+
+            font-size: 16px;
+        }
+
+        #score {
+            color: #eaf9ff;
+        }
+
+        .lives {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .life {
+            width: 12px;
+            height: 12px;
+
+            border-radius: 50%;
+
+            border:
+                1px solid #3fd0ff;
+
+            opacity: 0.25;
+        }
+
+        .life.on {
+            opacity: 1;
+
+            background: #3fd0ff;
+
+            box-shadow:
+                0 0 10px #3fd0ff;
+        }
+
+        .portal-wrap {
+            width: 220px;
+            height: 220px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 24px;
+
+            opacity: 0;
+
+            transform: scale(0.85);
+
+            transition:
+                opacity 0.6s ease,
+                transform 0.6s ease;
+        }
+
+        .game.active .portal-wrap {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #portalSvg {
+            width: 220px;
+            height: 220px;
+            display: block;
+        }
+
+        #vortex {
+            transform-origin:
+                110px 110px;
+        }
+
+        #vortex.closing {
+            animation:
+                vortexClosing 1.2s ease forwards;
+        }
+
+        #morty {
+            transform-origin:
+                110px 110px;
+
+            transition:
+                opacity 0.35s ease,
+                transform 0.35s ease;
+        }
+
+        #morty.gone {
+            opacity: 0;
+
+            transform:
+                scale(0);
+        }
+
+        @keyframes vortexClosing {
+
+            0% {
+                opacity: 1;
+
+                transform:
+                    scale(1) rotate(0deg);
+            }
+
+            100% {
+                opacity: 0;
+
+                transform:
+                    scale(0) rotate(180deg);
+            }
+        }
+
+        .game.detecting .portal-wrap {
+            animation:
+                portalDetection 1.4s ease-in-out;
+        }
+
+        @keyframes portalDetection {
+
+            0% {
+                opacity: 0;
+
+                transform:
+                    scale(0.55);
+            }
+
+            45% {
+                opacity: 1;
+
+                transform:
+                    scale(1.08);
+            }
+
+            100% {
+                opacity: 1;
+
+                transform:
+                    scale(1);
+            }
+        }
+
+        .sequence {
+            display: flex;
+
+            gap: 12px;
+
+            min-height: 46px;
+
+            opacity: 0;
+
+            transform:
+                translateY(6px);
+
+            transition:
+                opacity 0.35s ease,
+                transform 0.35s ease;
+
+            pointer-events: none;
+        }
+
+        .sequence.visible {
+            opacity: 1;
+
+            transform:
+                translateY(0);
+        }
+
+        .arrow {
+            width: 46px;
+            height: 46px;
+
+            border-radius: 10px;
+
+            background:
+                var(--panel);
+
+            border:
+                1px solid var(--arrow-off);
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            transition:
+                background 0.15s ease,
+                border-color 0.15s ease,
+                transform 0.15s ease;
+        }
+
+        .arrow svg {
+            width: 21px;
+            height: 21px;
+
+            fill:
+                var(--arrow-off);
+
+            transition:
+                fill 0.15s ease;
+        }
+
+        .arrow.lit {
+            border-color:
+                var(--glow);
+
+            background:
+                color-mix(in srgb,
+                    var(--glow) 18%,
+                    var(--panel));
+        }
+
+        .arrow.lit svg {
+            fill:
+                var(--arrow-on);
+        }
+
+        .arrow.hit {
+            border-color:
+                var(--portal);
+
+            transform:
+                scale(1.08);
+        }
+
+        .arrow.hit svg {
+            fill:
+                var(--portal);
+        }
+
+        .arrow.miss {
+            border-color:
+                var(--danger);
+
+            transform:
+                scale(0.92);
+        }
+
+        .arrow.miss svg {
+            fill:
+                var(--danger);
+        }
+
+        .round-msg {
+            font-size: 20px;
+            font-weight: 600;
+
+            letter-spacing: 0.01em;
+
+            min-height: 1.4em;
+
+            opacity: 0;
+
+            transform:
+                translateY(4px);
+
+            transition:
+                opacity 0.3s ease,
+                transform 0.3s ease,
+                color 0.3s ease;
+
+            text-align: center;
+        }
+
+        .round-msg.visible {
+            opacity: 1;
+
+            transform:
+                translateY(0);
+        }
+
+        .round-msg.ok {
+            color:
+                var(--portal);
+        }
+
+        .round-msg.fail {
+            color:
+                var(--danger);
+        }
+
+        .game.cinematic .sequence {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .game.playing .sequence {
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1250px) {
+
+            .screen {
+                gap: 30px;
+            }
+
+            .system-panel {
+                width: 270px;
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 1100px) {
+
+            .screen {
+                gap: 25px;
+            }
+
+            .avatar-corner {
+                min-width: 300px;
+            }
+
+            .system-panel {
+                width: 250px;
+                min-width: 230px;
+            }
+        }
+
+        @media (max-width: 850px) {
+
+            body {
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .screen {
+                gap: 30px;
+                padding: 25px;
+                flex-wrap: wrap;
+            }
+
+            .system-panel {
+                width: 100%;
+                max-width: 520px;
+            }
+
+            .game {
+                width: 450px;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .screen {
+                min-height: 100vh;
+                height: auto;
+
+                flex-direction: column;
+
+                gap: 30px;
+
+                padding:
+                    30px 20px;
+            }
+
+            .game {
+                width: 100%;
+                max-width: 520px;
+            }
+
+            .stage {
+                width: 200px;
+                height: 200px;
+            }
+
+            .avatar-corner {
+                min-width: 260px;
+            }
+
+            .caption {
+                width: 280px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            #face {
+                transition: none;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="screen">
+
+        <!-- =====================================================
+         AVATAR
+         ===================================================== -->
+
+        <div class="avatar-corner">
+
+            <div class="stage">
+
+                <svg id="face" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img"
+                    aria-label="Avatar de l'Oracle du RickLab">
+
+                    <defs>
+
+                        <radialGradient id="orbFill" cx="38%" cy="32%" r="78%">
+
+                            <stop offset="0%" stop-color="#bff3ff" />
+
+                            <stop offset="38%" stop-color="var(--glow, #3fd0ff)" />
+
+                            <stop offset="100%" stop-color="#0a2b45" />
+
+                        </radialGradient>
+
+                        <radialGradient id="auraFill" cx="50%" cy="50%" r="50%">
+
+                            <stop offset="55%" stop-color="var(--glow, #3fd0ff)" stop-opacity="0.34" />
+
+                            <stop offset="100%" stop-color="var(--glow, #3fd0ff)" stop-opacity="0" />
+
+                        </radialGradient>
+
+                    </defs>
+
+                    <circle id="aura" cx="200" cy="200" r="188" fill="url(#auraFill)" />
+
+                    <circle id="ring" cx="200" cy="200" r="152" fill="none" stroke="var(--glow, #3fd0ff)"
+                        stroke-width="1.5" opacity="0.35" />
+
+                    <circle id="orb" cx="200" cy="200" r="140" fill="url(#orbFill)" />
+
+                    <g id="features">
+
+                        <g id="eyes">
+
+                            <g id="eyeL">
+
+                                <ellipse id="eyeLShape" cx="158" cy="180" rx="20" ry="26" fill="var(--face, #04070e)" />
+
+                                <circle id="eyeLGlint" cx="151" cy="170" r="5.5" fill="var(--glint, #eaf9ff)"
+                                    opacity="0.9" />
+
+                            </g>
+
+                            <g id="eyeR">
+
+                                <ellipse id="eyeRShape" cx="242" cy="180" rx="20" ry="26" fill="var(--face, #04070e)" />
+
+                                <circle id="eyeRGlint" cx="235" cy="170" r="5.5" fill="var(--glint, #eaf9ff)"
+                                    opacity="0.9" />
+
+                            </g>
+
+                        </g>
+
+                        <g id="brows" opacity="0">
+
+                            <path id="browL" d="M 136 140 L 180 140" stroke="var(--face, #04070e)" stroke-width="8"
+                                stroke-linecap="round" fill="none" />
+
+                            <path id="browR" d="M 220 140 L 264 140" stroke="var(--face, #04070e)" stroke-width="8"
+                                stroke-linecap="round" fill="none" />
+
+                        </g>
+
+                        <path id="mouth" d="" fill="var(--face, #04070e)" />
+
+                    </g>
+
+                </svg>
+
+            </div>
+
+            <p id="caption" class="caption is-quiet"></p>
+
+        </div>
+
+
+        <!-- =====================================================
+         JEU
+         ===================================================== -->
+
+        <div class="game">
+
+            <div class="hud">
+
+                <span id="score">
+                    Portails fermés : 0
+                </span>
+
+                <span class="lives" id="lives"></span>
+
+            </div>
+
+            <div class="portal-wrap">
+
+                <svg id="portalSvg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+
+                    <defs>
+
+                        <radialGradient id="portalGlow" cx="50%" cy="50%" r="50%">
+
+                            <stop offset="0%" stop-color="var(--portal, #7dfb6b)" stop-opacity="0.9" />
+
+                            <stop offset="60%" stop-color="var(--portal, #7dfb6b)" stop-opacity="0.25" />
+
+                            <stop offset="100%" stop-color="var(--portal, #7dfb6b)" stop-opacity="0" />
+
+                        </radialGradient>
+
+                    </defs>
+
+                    <circle cx="110" cy="110" r="95" fill="url(#portalGlow)" />
+
+                    <g id="vortex">
+
+                        <circle cx="110" cy="110" r="78" fill="none" stroke="var(--portal, #7dfb6b)" stroke-width="3"
+                            stroke-dasharray="10 14" opacity="0.85" />
+
+                        <circle cx="110" cy="110" r="58" fill="none" stroke="var(--portal, #7dfb6b)" stroke-width="2"
+                            stroke-dasharray="6 10" opacity="0.6" transform="rotate(35 110 110)" />
+
+                        <circle cx="110" cy="110" r="38" fill="none" stroke="var(--portal, #7dfb6b)" stroke-width="2"
+                            stroke-dasharray="4 8" opacity="0.5" transform="rotate(70 110 110)" />
+
+                    </g>
+
+                    <g id="morty">
+
+                        <ellipse cx="110" cy="128" rx="16" ry="20" fill="#eaf7ea" />
+
+                        <circle cx="110" cy="98" r="17" fill="#eaf7ea" />
+
+                        <circle cx="103" cy="96" r="2.6" fill="#1a1f1a" />
+
+                        <circle cx="117" cy="96" r="2.6" fill="#1a1f1a" />
+
+                        <path d="M 103 106 Q 110 111 117 106" stroke="#1a1f1a" stroke-width="2" fill="none"
+                            stroke-linecap="round" />
+
+                    </g>
+
+                </svg>
+
+            </div>
+
+            <div class="sequence" id="sequence"></div>
+
+            <p class="round-msg" id="roundMsg">
+                Portail détecté…
+            </p>
+
+        </div>
+
+
+        <!-- =====================================================
+         PANNEAU ETAT DU SYSTEME
+         ===================================================== -->
+
+        <div class="system-panel">
+
+            <h2 class="system-title">
+                État du système
+            </h2>
+
+            <div class="system-main-status">
+
+                <span id="systemStatusDot" class="status-dot"></span>
+
+                <span id="systemStatus">
+                    Connexion au Raspberry...
+                </span>
+
+            </div>
+
+            <div class="device-list">
+
+                <div class="device-row">
+
+                    <span class="device-name">
+                        Micro
+                    </span>
+
+                    <span id="microState" class="device-state">
+                        PRÊT
+                    </span>
+
+                </div>
+
+                <div class="device-row">
+
+                    <span class="device-name">
+                        Lumière
+                    </span>
+
+                    <span id="lightState" class="device-state">
+                        ÉTEINTE
+                    </span>
+
+                </div>
+
+                <div class="device-row">
+
+                    <span class="device-name">
+                        Musique
+                    </span>
+
+                    <span id="musicState" class="device-state">
+                        ARRÊTÉE
+                    </span>
+
+                </div>
+
+                <div class="device-row">
+
+                    <span class="device-name">
+                        Ventilateur
+                    </span>
+
+                    <span id="fanState" class="device-state">
+                        ARRÊTÉ
+                    </span>
+
+                </div>
+
+                <div class="device-row">
+
+                    <span class="device-name">
+                        Sécurité
+                    </span>
+
+                    <span id="securityState" class="device-state">
+                        NORMALE
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+     AVATAR
+     ============================================================ -->
+
+    <script>
+
+        (function () {
+
+            'use strict';
+
+            const $ =
+                id =>
+                    document.getElementById(id);
+
+            const el = {
+
+                root:
+                    document.documentElement,
+
+                face:
+                    $('face'),
+
+                aura:
+                    $('aura'),
+
+                ring:
+                    $('ring'),
+
+                eyeL:
+                    $('eyeL'),
+
+                eyeR:
+                    $('eyeR'),
+
+                eyeLShape:
+                    $('eyeLShape'),
+
+                eyeRShape:
+                    $('eyeRShape'),
+
+                eyeLGlint:
+                    $('eyeLGlint'),
+
+                eyeRGlint:
+                    $('eyeRGlint'),
+
+                brows:
+                    $('brows'),
+
+                browL:
+                    $('browL'),
+
+                browR:
+                    $('browR'),
+
+                mouth:
+                    $('mouth'),
+
+                caption:
+                    $('caption')
+            };
+
+            const reduceMotion =
+                window.matchMedia(
+                    '(prefers-reduced-motion: reduce)'
+                ).matches;
+
+            const EMOTIONS = {
+
+                neutral: {
+                    eye: 1.00,
+                    eyeRx: 1.00,
+                    curve: 4,
+                    open: 5,
+                    width: 72,
+                    brow: 0,
+                    browTilt: 0
+                },
+
+                happy: {
+                    eye: 0.78,
+                    eyeRx: 1.06,
+                    curve: 30,
+                    open: 14,
+                    width: 86,
+                    brow: 0,
+                    browTilt: 0
+                },
+
+                angry: {
+                    eye: 0.72,
+                    eyeRx: 1.02,
+                    curve: -18,
+                    open: 6,
+                    width: 66,
+                    brow: 1,
+                    browTilt: 14
+                },
+
+                tired: {
+                    eye: 0.40,
+                    eyeRx: 1.00,
+                    curve: -8,
+                    open: 4,
+                    width: 62,
+                    brow: 0.6,
+                    browTilt: -8
+                },
+
+                surprised: {
+                    eye: 1.34,
+                    eyeRx: 1.10,
+                    curve: 0,
+                    open: 34,
+                    width: 46,
+                    brow: 1,
+                    browTilt: -6
+                },
+
+                thinking: {
+                    eye: 0.92,
+                    eyeRx: 0.96,
+                    curve: 8,
+                    open: 4,
+                    width: 58,
+                    brow: 0.5,
+                    browTilt: -4
+                }
+
+            };
+
+            const STATES = {
+
+                idle: {
+                    glow: '#3fd0ff',
+                    ring: 0.30,
+                    aura: 0.75,
+                    breathe: 1.0
+                },
+
+                listening: {
+                    glow: '#41f2b0',
+                    ring: 0.85,
+                    aura: 1.00,
+                    breathe: 1.4
+                },
+
+                thinking: {
+                    glow: '#9a7bff',
+                    ring: 0.55,
+                    aura: 0.85,
+                    breathe: 1.8
+                },
+
+                speaking: {
+                    glow: '#4fe0ff',
+                    ring: 0.70,
+                    aura: 1.00,
+                    breathe: 1.2
+                }
+
+            };
+
+            let state =
+                'idle';
+
+            let emotion =
+                'neutral';
+
+            let level =
+                0;
+
+            let rawLevel =
+                0;
+
+            const cur = {
+
+                eye: 1,
+                eyeRx: 1,
+                curve: 4,
+                open: 5,
+                width: 72,
+                brow: 0,
+                browTilt: 0,
+                gazeX: 0,
+                gazeY: 0,
+                ring: 0.3,
+                aura: 0.75
+            };
+
+            let blink =
+                1;
+
+            let blinkTimer =
+                0;
+
+            let gazeTarget = {
+                x: 0,
+                y: 0
+            };
+
+            let gazeTimer =
+                0;
+
+            const lerp =
+                (a, b, k) =>
+                    a + (b - a) * k;
+
+            const clamp =
+                (v, a, b) =>
+                    Math.min(
+                        b,
+                        Math.max(a, v)
+                    );
+
+            function mouthPath(
+                width,
+                curve,
+                open
+            ) {
+
+                const x0 =
+                    200 - width / 2;
+
+                const x1 =
+                    200 + width / 2;
+
+                const y =
+                    268;
+
+                const top =
+                    y +
+                    curve -
+                    open * 0.35;
+
+                const bottom =
+                    y +
+                    curve +
+                    open * 0.85;
+
+                return `
+            M ${x0} ${y}
+            Q 200 ${top} ${x1} ${y}
+            Q 200 ${bottom} ${x0} ${y}
+            Z
+        `;
+            }
+
+            function scheduleBlink(now) {
+
+                blinkTimer =
+                    now +
+                    1800 +
+                    Math.random() * 4200;
+            }
+
+            function updateBlink(
+                now,
+                dt
+            ) {
+
+                if (now > blinkTimer) {
+
+                    blink -=
+                        dt * 12;
+
+                    if (blink <= -0.6) {
+
+                        blink = -0.6;
+
+                        scheduleBlink(now);
+                    }
+
+                } else {
+
+                    blink =
+                        Math.min(
+                            1,
+                            blink + dt * 9
+                        );
+                }
+            }
+
+            function updateGaze(now) {
+
+                if (now > gazeTimer) {
+
+                    if (state === 'thinking') {
+
+                        gazeTarget = {
+
+                            x:
+                                -6 +
+                                Math.random() * 3,
+
+                            y:
+                                -9
+                        };
+
+                        gazeTimer =
+                            now +
+                            900 +
+                            Math.random() * 700;
+
+                    } else {
+
+                        gazeTarget = {
+
+                            x:
+                                (Math.random() - 0.5) * 9,
+
+                            y:
+                                (Math.random() - 0.5) * 6
+                        };
+
+                        gazeTimer =
+                            now +
+                            1600 +
+                            Math.random() * 2600;
+                    }
+                }
+            }
+
+            let last =
+                performance.now();
+
+            function frame(now) {
+
+                const dt =
+                    Math.min(
+                        0.05,
+                        (now - last) / 1000
+                    );
+
+                last =
+                    now;
+
+                const e =
+                    EMOTIONS[emotion] ||
+                    EMOTIONS.neutral;
+
+                const s =
+                    STATES[state] ||
+                    STATES.idle;
+
+                const k =
+                    1 -
+                    Math.pow(
+                        0.001,
+                        dt
+                    );
+
+                level =
+                    lerp(
+                        level,
+                        rawLevel,
+                        1 -
+                        Math.pow(
+                            0.02,
+                            dt
+                        )
+                    );
+
+                cur.eye =
+                    lerp(
+                        cur.eye,
+                        e.eye,
+                        k
+                    );
+
+                cur.eyeRx =
+                    lerp(
+                        cur.eyeRx,
+                        e.eyeRx,
+                        k
+                    );
+
+                cur.curve =
+                    lerp(
+                        cur.curve,
+                        e.curve,
+                        k
+                    );
+
+                cur.width =
+                    lerp(
+                        cur.width,
+                        e.width,
+                        k
+                    );
+
+                cur.brow =
+                    lerp(
+                        cur.brow,
+                        e.brow,
+                        k
+                    );
+
+                cur.browTilt =
+                    lerp(
+                        cur.browTilt,
+                        e.browTilt,
+                        k
+                    );
+
+                cur.ring =
+                    lerp(
+                        cur.ring,
+                        s.ring,
+                        k
+                    );
+
+                cur.aura =
+                    lerp(
+                        cur.aura,
+                        s.aura,
+                        k
+                    );
+
+                cur.gazeX =
+                    lerp(
+                        cur.gazeX,
+                        gazeTarget.x,
+                        k * 0.6
+                    );
+
+                cur.gazeY =
+                    lerp(
+                        cur.gazeY,
+                        gazeTarget.y,
+                        k * 0.6
+                    );
+
+                const voiced =
+                    state === 'speaking'
+                        ? 8 + level * 46
+                        : 0;
+
+                cur.open =
+                    lerp(
+                        cur.open,
+                        Math.max(
+                            e.open,
+                            voiced
+                        ),
+                        state === 'speaking'
+                            ? 0.45
+                            : k
+                    );
+
+                updateBlink(
+                    now,
+                    dt
+                );
+
+                updateGaze(
+                    now
+                );
+
+                const t =
+                    now / 1000;
+
+                const breath =
+                    reduceMotion
+                        ? 0
+                        : Math.sin(
+                            t * s.breathe
+                        ) * 0.008;
+
+                const orbScale =
+                    1 +
+                    breath +
+                    (
+                        state === 'speaking'
+                            ? level * 0.035
+                            : 0
+                    );
+
+                el.face.style.transform =
+                    `scale(${orbScale.toFixed(4)})`;
+
+                const ringPulse =
+                    reduceMotion
+                        ? 0
+                        : Math.sin(
+                            t * 2.2
+                        ) * 0.012;
+
+                const ringScale =
+                    1 +
+                    ringPulse +
+                    level * 0.09;
+
+                el.ring.setAttribute(
+                    'r',
+                    (
+                        152 *
+                        ringScale
+                    ).toFixed(2)
+                );
+
+                el.ring.setAttribute(
+                    'opacity',
+                    clamp(
+                        cur.ring +
+                        level * 0.4,
+                        0,
+                        1
+                    ).toFixed(3)
+                );
+
+                el.aura.setAttribute(
+                    'opacity',
+                    clamp(
+                        cur.aura +
+                        level * 0.25,
+                        0,
+                        1
+                    ).toFixed(3)
+                );
+
+                const openY =
+                    clamp(
+                        cur.eye *
+                        clamp(
+                            blink,
+                            0.04,
+                            1.4
+                        ),
+                        0.04,
+                        1.5
+                    );
+
+                applyEye(
+                    el.eyeL,
+                    el.eyeLShape,
+                    el.eyeLGlint,
+                    158,
+                    openY
+                );
+
+                applyEye(
+                    el.eyeR,
+                    el.eyeRShape,
+                    el.eyeRGlint,
+                    242,
+                    openY
+                );
+
+                el.brows.setAttribute(
+                    'opacity',
+                    cur.brow.toFixed(3)
+                );
+
+                el.browL.setAttribute(
+                    'transform',
+                    `
+                translate(
+                    ${cur.gazeX.toFixed(2)}
+                    ${(cur.gazeY - cur.brow * 4).toFixed(2)}
+                )
+                rotate(
+                    ${cur.browTilt.toFixed(2)}
+                    158
+                    140
+                )
+            `
+                );
+
+                el.browR.setAttribute(
+                    'transform',
+                    `
+                translate(
+                    ${cur.gazeX.toFixed(2)}
+                    ${(cur.gazeY - cur.brow * 4).toFixed(2)}
+                )
+                rotate(
+                    ${(-cur.browTilt).toFixed(2)}
+                    242
+                    140
+                )
+            `
+                );
+
+                el.mouth.setAttribute(
+                    'd',
+                    mouthPath(
+                        cur.width,
+                        cur.curve,
+                        cur.open
+                    )
+                );
+
+                el.mouth.setAttribute(
+                    'transform',
+                    `
+                translate(
+                    ${(cur.gazeX * 0.4).toFixed(2)}
+                    ${(cur.gazeY * 0.3).toFixed(2)}
+                )
+            `
+                );
+
+                requestAnimationFrame(
+                    frame
+                );
+            }
+
+            function applyEye(
+                group,
+                shape,
+                glint,
+                cx,
+                openY
+            ) {
+
+                shape.setAttribute(
+                    'cx',
+                    cx
+                );
+
+                shape.setAttribute(
+                    'rx',
+                    (
+                        20 *
+                        cur.eyeRx
+                    ).toFixed(2)
+                );
+
+                shape.setAttribute(
+                    'ry',
+                    (
+                        26 *
+                        openY
+                    ).toFixed(2)
+                );
+
+                glint.setAttribute(
+                    'cx',
+                    (
+                        cx - 7
+                    ).toFixed(2)
+                );
+
+                glint.setAttribute(
+                    'cy',
+                    (
+                        180 -
+                        10 * openY
+                    ).toFixed(2)
+                );
+
+                glint.setAttribute(
+                    'opacity',
+                    clamp(
+                        openY,
+                        0,
+                        1
+                    ).toFixed(2)
+                );
+
+                group.setAttribute(
+                    'transform',
+                    `
+                translate(
+                    ${cur.gazeX.toFixed(2)}
+                    ${cur.gazeY.toFixed(2)}
+                )
+            `
+                );
+            }
+
+            function setState(next) {
+
+                if (!STATES[next]) {
+                    return;
+                }
+
+                state =
+                    next;
+
+                el.root.style.setProperty(
+                    '--glow',
+                    STATES[next].glow
+                );
+
+                gazeTimer =
+                    0;
+
+                if (next !== 'speaking') {
+                    rawLevel =
+                        0;
+                }
+            }
+
+            function setEmotion(next) {
+
+                if (!EMOTIONS[next]) {
+                    return;
+                }
+
+                emotion =
+                    next;
+            }
+
+            function setLevel(v) {
+
+                rawLevel =
+                    clamp(
+                        Number(v) || 0,
+                        0,
+                        1
+                    );
+            }
+
+            function caption(text) {
+
+                el.caption.textContent =
+                    text || '';
+
+                el.caption.classList.toggle(
+                    'is-quiet',
+                    !text
+                );
+            }
+
+            let audioCtx =
+                null;
+
+            function listenTo(stream) {
+
+                audioCtx =
+                    audioCtx ||
+                    new (
+                        window.AudioContext ||
+                        window.webkitAudioContext
+                    )();
+
+                const source =
+                    audioCtx.createMediaStreamSource(
+                        stream
+                    );
+
+                const analyser =
+                    audioCtx.createAnalyser();
+
+                analyser.fftSize =
+                    512;
+
+                source.connect(
+                    analyser
+                );
+
+                const data =
+                    new Uint8Array(
+                        analyser.frequencyBinCount
+                    );
+
+                (function read() {
+
+                    analyser.getByteTimeDomainData(
+                        data
+                    );
+
+                    let sum =
+                        0;
+
+                    for (
+                        let i = 0;
+                        i < data.length;
+                        i++
+                    ) {
+
+                        const v =
+                            (
+                                data[i] - 128
+                            ) / 128;
+
+                        sum +=
+                            v * v;
+                    }
+
+                    setLevel(
+                        Math.min(
+                            1,
+                            Math.sqrt(
+                                sum /
+                                data.length
+                            ) * 4
+                        )
+                    );
+
+                    requestAnimationFrame(
+                        read
+                    );
+
+                })();
+            }
+
+            let mouthTimer =
+                null;
+
+            function speakFor(utterance) {
+
+                utterance.addEventListener(
+                    'start',
+                    () => {
+
+                        setState(
+                            'speaking'
+                        );
+
+                        clearInterval(
+                            mouthTimer
+                        );
+
+                        mouthTimer =
+                            setInterval(
+                                () => {
+
+                                    setLevel(
+                                        0.25 +
+                                        Math.random() * 0.75
+                                    );
+
+                                },
+                                90
+                            );
+                    }
+                );
+
+                const stop =
+                    () => {
+
+                        clearInterval(
+                            mouthTimer
+                        );
+
+                        setLevel(
+                            0
+                        );
+
+                        setState(
+                            'idle'
+                        );
+                    };
+
+                utterance.addEventListener(
+                    'end',
+                    stop
+                );
+
+                utterance.addEventListener(
+                    'error',
+                    stop
+                );
+
+                return utterance;
+            }
+
+            window.Avatar = {
+
+                setState,
+                setEmotion,
+                setLevel,
+                caption,
+                listenTo,
+                speakFor
+            };
+
+            el.root.style.setProperty(
+                '--glow',
+                STATES.idle.glow
+            );
+
+            scheduleBlink(
+                performance.now()
+            );
+
+            requestAnimationFrame(
+                frame
+            );
+
+        })();
+
+    </script>
+
+
+    <!-- ============================================================
+     ORACLE STATUS
+     ============================================================ -->
+
+    <script>
+
+        (function () {
+
+            'use strict';
+
+            const ORACLE_STATUS = {
+
+                LOCKED: {
+                    text:
+                        'Système verrouillé.',
+                    state:
+                        'idle',
+                    emotion:
+                        'neutral'
+                },
+
+                LISTENING: {
+                    text:
+                        'Je t’écoute.',
+                    state:
+                        'listening',
+                    emotion:
+                        'neutral'
+                },
+
+                VERIFYING: {
+                    text:
+                        'Vérification vocale en cours.',
+                    state:
+                        'thinking',
+                    emotion:
+                        'thinking'
+                },
+
+                ACCESS_GRANTED: {
+                    text:
+                        'Accès autorisé.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'happy'
+                },
+
+                ACCESS_REFUSED: {
+                    text:
+                        'Accès refusé.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'angry'
+                },
+
+                LIGHT_ON: {
+                    text:
+                        'J’allume la lumière.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'happy'
+                },
+
+                LIGHT_OFF: {
+                    text:
+                        'J’éteins la lumière.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'neutral'
+                },
+
+                MUSIC_ON: {
+                    text:
+                        'Je lance la musique.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'happy'
+                },
+
+                MUSIC_OFF: {
+                    text:
+                        'J’arrête la musique.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'neutral'
+                },
+
+                FAN_ON: {
+                    text:
+                        'J’allume le ventilateur.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'happy'
+                },
+
+                FAN_OFF: {
+                    text:
+                        'J’arrête le ventilateur.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'neutral'
+                },
+
+                INTRUSION: {
+                    text:
+                        'Intrusion détectée.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'surprised'
+                },
+
+                ALARM_STOP: {
+                    text:
+                        'Alarme arrêtée.',
+                    state:
+                        'speaking',
+                    emotion:
+                        'neutral'
+                }
+
+            };
+
+            function setOracleStatus(
+                status,
+                customText = null
+            ) {
+
+                const config =
+                    ORACLE_STATUS[status];
+
+                if (!config) {
+
+                    console.warn(
+                        'Etat Oracle inconnu :',
+                        status
+                    );
+
+                    return;
+                }
+
+                if (window.Avatar) {
+
+                    Avatar.setEmotion(
+                        config.emotion
+                    );
+
+                    Avatar.setState(
+                        config.state
+                    );
+
+                    Avatar.caption(
+                        customText ||
+                        config.text
+                    );
+                }
+
+            }
+
+            window.OracleStatus = {
+
+                setOracleStatus,
+
+                definitions:
+                    ORACLE_STATUS
+            };
+
+            /*
+             * IMPORTANT :
+             * On ne force PLUS "LOCKED" ici.
+             * L'état réel vient maintenant du Raspberry.
+             */
+
+        })();
+
+    </script>
+
+
+    <!-- ============================================================
+     TABLEAU DE BORD SYSTEME — CONNEXION RASPBERRY
+     ============================================================ -->
+
+    <script>
+
+        (function () {
+
+            'use strict';
+
+
+            /*
+             * =========================================================
+             * ADRESSE DU PONT RASPBERRY
+             * =========================================================
+             */
+
+            const PONT_URL =
+                'http://192.168.1.15:8080/etat';
+
+
+            /*
+             * =========================================================
+             * ELEMENTS DE L'INTERFACE
+             * =========================================================
+             */
+
+            const status =
+                document.getElementById(
+                    'systemStatus'
+                );
+
+            const statusDot =
+                document.getElementById(
+                    'systemStatusDot'
+                );
+
+            const micro =
+                document.getElementById(
+                    'microState'
+                );
+
+            const light =
+                document.getElementById(
+                    'lightState'
+                );
+
+            const music =
+                document.getElementById(
+                    'musicState'
+                );
+
+            const fan =
+                document.getElementById(
+                    'fanState'
+                );
+
+            const security =
+                document.getElementById(
+                    'securityState'
+                );
+
+
+            /*
+             * =========================================================
+             * STATUT GENERAL
+             * =========================================================
+             */
+
+            function setMainStatus(
+                text,
+                color = 'blue'
+            ) {
+
+                status.textContent =
+                    text;
+
+                statusDot.className =
+                    'status-dot';
+
+                if (color !== 'blue') {
+
+                    statusDot.classList.add(
+                        color
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * =========================================================
+             * ETAT D'UN APPAREIL
+             * =========================================================
+             */
+
+            function setDevice(
+                element,
+                text,
+                active = false,
+                danger = false
+            ) {
+
+                element.textContent =
+                    text;
+
+                element.className =
+                    'device-state';
+
+                if (active) {
+
+                    element.classList.add(
+                        'on'
+                    );
+
+                }
+
+                if (danger) {
+
+                    element.classList.add(
+                        'danger'
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * =========================================================
+             * AFFICHAGE DES DONNEES DU RASPBERRY
+             * =========================================================
+             */
+
+            function afficherEtat(
+                data
+            ) {
+
+                /*
+                 * MICRO
+                 */
+
+                if (data.micro) {
+
+                    const microActif =
+                        data.micro === 'ÉCOUTE';
+
+                    setDevice(
+                        micro,
+                        data.micro,
+                        microActif
+                    );
+
+                }
+
+
+                /*
+                 * LUMIERE
+                 */
+
+                if (data.lumiere) {
+
+                    const allumee =
+                        data.lumiere === 'ALLUMÉE';
+
+                    setDevice(
+                        light,
+                        data.lumiere,
+                        allumee
+                    );
+
+                }
+
+
+                /*
+                 * MUSIQUE
+                 */
+
+                if (data.musique) {
+
+                    const active =
+                        data.musique === 'EN COURS';
+
+                    setDevice(
+                        music,
+                        data.musique,
+                        active
+                    );
+
+                }
+
+
+                /*
+                 * VENTILATEUR
+                 */
+
+                if (data.ventilateur) {
+
+                    const active =
+                        data.ventilateur === 'ALLUMÉ';
+
+                    setDevice(
+                        fan,
+                        data.ventilateur,
+                        active
+                    );
+
+                }
+
+
+                /*
+                 * SECURITE
+                 */
+
+                if (data.securite) {
+
+                    const danger =
+                        data.securite === 'ALARME' ||
+                        data.securite === 'REFUSÉ' ||
+                        data.securite === 'INTRUSION';
+
+                    const active =
+                        data.securite === 'AUTORISÉ';
+
+                    setDevice(
+                        security,
+                        data.securite,
+                        active,
+                        danger
+                    );
+
+                }
+
+
+                /*
+                 * =====================================================
+                 * STATUT GENERAL
+                 * =====================================================
+                 */
+
+                if (
+                    data.securite === 'ALARME' ||
+                    data.securite === 'REFUSÉ' ||
+                    data.securite === 'INTRUSION'
+                ) {
+
+                    setMainStatus(
+                        'Sécurité active',
+                        'red'
+                    );
+
+                }
+
+                else if (
+                    data.securite === 'AUTORISÉ'
+                ) {
+
+                    setMainStatus(
+                        'Accès autorisé',
+                        'green'
+                    );
+
+                }
+
+                else if (
+                    data.micro === 'ÉCOUTE'
+                ) {
+
+                    setMainStatus(
+                        'Oracle en écoute',
+                        'green'
+                    );
+
+                }
+
+                else if (
+                    data.micro === 'RÉFLEXION'
+                ) {
+
+                    setMainStatus(
+                        'Oracle réfléchit',
+                        'purple'
+                    );
+
+                }
+
+                else if (
+                    data.micro === 'ERREUR'
+                ) {
+
+                    setMainStatus(
+                        'Erreur microphone',
+                        'red'
+                    );
+
+                }
+
+                else {
+
+                    /*
+                     * Etat normal :
+                     * on n'affiche plus "Système verrouillé"
+                     * de manière statique.
+                     */
+
+                    setMainStatus(
+                        'Système opérationnel',
+                        'blue'
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * =========================================================
+             * RECUPERATION DE L'ETAT DU RASPBERRY
+             * =========================================================
+             */
+
+            async function recupererEtat() {
+
+                try {
+
+                    const response =
+                        await fetch(
+                            PONT_URL,
+                            {
+                                cache:
+                                    'no-store'
+                            }
+                        );
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            'Pont inaccessible'
+                        );
+
+                    }
+
+                    const data =
+                        await response.json();
+
+                    afficherEtat(
+                        data
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.warn(
+                        'Connexion au Raspberry impossible :',
+                        error
+                    );
+
+                    setMainStatus(
+                        'Connexion au Raspberry perdue',
+                        'red'
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * =========================================================
+             * API POUR MAIN.PY
+             * =========================================================
+             */
+
+            window.OracleUI = {
+
+                setStatus(
+                    oracleState
+                ) {
+
+                    switch (
+                    oracleState
+                    ) {
+
+                        case 'LOCKED':
+
+                            setMainStatus(
+                                'Système verrouillé'
+                            );
+
+                            break;
+
+
+                        case 'LISTENING':
+
+                            setMainStatus(
+                                'Oracle en écoute',
+                                'green'
+                            );
+
+                            break;
+
+
+                        case 'VERIFYING':
+
+                            setMainStatus(
+                                'Vérification vocale',
+                                'purple'
+                            );
+
+                            break;
+
+
+                        case 'ACCESS_GRANTED':
+
+                            setMainStatus(
+                                'Accès autorisé',
+                                'green'
+                            );
+
+                            break;
+
+
+                        case 'ACCESS_REFUSED':
+
+                            setMainStatus(
+                                'Accès refusé',
+                                'red'
+                            );
+
+                            break;
+
+
+                        case 'INTRUSION':
+
+                            setMainStatus(
+                                'Intrusion détectée',
+                                'red'
+                            );
+
+                            break;
+
+
+                        case 'LIGHT_ON':
+
+                            setDevice(
+                                light,
+                                'ALLUMÉE',
+                                true
+                            );
+
+                            break;
+
+
+                        case 'LIGHT_OFF':
+
+                            setDevice(
+                                light,
+                                'ÉTEINTE'
+                            );
+
+                            break;
+
+
+                        case 'MUSIC_ON':
+
+                            setDevice(
+                                music,
+                                'EN COURS',
+                                true
+                            );
+
+                            break;
+
+
+                        case 'MUSIC_OFF':
+
+                            setDevice(
+                                music,
+                                'ARRÊTÉE'
+                            );
+
+                            break;
+
+
+                        case 'FAN_ON':
+
+                            setDevice(
+                                fan,
+                                'ALLUMÉ',
+                                true
+                            );
+
+                            break;
+
+
+                        case 'FAN_OFF':
+
+                            setDevice(
+                                fan,
+                                'ARRÊTÉ'
+                            );
+
+                            break;
+
+
+                        case 'SPEAKING':
+
+                            setMainStatus(
+                                'Oracle parle',
+                                'blue'
+                            );
+
+                            break;
+
+                    }
+
+                },
+
+
+                setLight(
+                    on
+                ) {
+
+                    setDevice(
+                        light,
+                        on
+                            ? 'ALLUMÉE'
+                            : 'ÉTEINTE',
+                        on
+                    );
+
+                },
+
+
+                setMusic(
+                    on
+                ) {
+
+                    setDevice(
+                        music,
+                        on
+                            ? 'EN COURS'
+                            : 'ARRÊTÉE',
+                        on
+                    );
+
+                },
+
+
+                setFan(
+                    on
+                ) {
+
+                    setDevice(
+                        fan,
+                        on
+                            ? 'ALLUMÉ'
+                            : 'ARRÊTÉ',
+                        on
+                    );
+
+                },
+
+
+                setMicro(
+                    listening
+                ) {
+
+                    setDevice(
+                        micro,
+                        listening
+                            ? 'ÉCOUTE'
+                            : 'PRÊT',
+                        listening
+                    );
+
+                }
+
+            };
+
+
+            /*
+             * =========================================================
+             * PREMIER AFFICHAGE
+             * =========================================================
+             */
+
+            setMainStatus(
+                'Connexion au Raspberry...',
+                'blue'
+            );
+
+
+            /*
+             * =========================================================
+             * RECUPERATION IMMEDIATE
+             * =========================================================
+             */
+
+            recupererEtat();
+
+
+            /*
+             * =========================================================
+             * ACTUALISATION AUTOMATIQUE
+             * =========================================================
+             */
+
+            setInterval(
+                recupererEtat,
+                1000
+            );
+
+        })();
+
+    </script>
+
+
+    <!-- ============================================================
+     JEU — PORTAILS DU LABO
+     ============================================================ -->
+
+    <script>
+
+        (function () {
+
+            'use strict';
+
+            const DIRS = [
+                'up',
+                'right',
+                'down',
+                'left'
+            ];
+
+            const ARROW_PATHS = {
+
+                up:
+                    'M10 2 L18 14 L12 14 L12 18 L8 18 L8 14 L2 14 Z',
+
+                down:
+                    'M10 18 L2 6 L8 6 L8 2 L12 2 L12 6 L18 6 Z',
+
+                left:
+                    'M2 10 L14 2 L14 8 L18 8 L18 12 L14 12 L14 18 Z',
+
+                right:
+                    'M18 10 L6 18 L6 12 L2 12 L2 8 L6 8 L6 2 Z'
+
+            };
+
+            const KEY_MAP = {
+
+                ArrowUp: 'up',
+                ArrowDown: 'down',
+                ArrowLeft: 'left',
+                ArrowRight: 'right',
+
+                z: 'up',
+                s: 'down',
+                q: 'left',
+                d: 'right',
+
+                Z: 'up',
+                S: 'down',
+                Q: 'left',
+                D: 'right'
+            };
+
+            const el = {
+
+                game:
+                    document.querySelector(
+                        '.game'
+                    ),
+
+                sequence:
+                    document.getElementById(
+                        'sequence'
+                    ),
+
+                roundMsg:
+                    document.getElementById(
+                        'roundMsg'
+                    ),
+
+                score:
+                    document.getElementById(
+                        'score'
+                    ),
+
+                lives:
+                    document.getElementById(
+                        'lives'
+                    ),
+
+                vortex:
+                    document.getElementById(
+                        'vortex'
+                    ),
+
+                morty:
+                    document.getElementById(
+                        'morty'
+                    )
+
+            };
+
+            let hardwareBridge =
+                null;
+
+            let round =
+                [];
+
+            let step =
+                0;
+
+            let phase =
+                'idle';
+
+            let score =
+                0;
+
+            let lives =
+                3;
+
+            let detectionRunning =
+                false;
+
+            const LINES = {
+
+                detection: [
+
+                    'Je lance la détection.',
+
+                    'Je recherche les Morty dans le portail.',
+
+                    'Détection des Morty en cours.'
+                ],
+
+                start: [
+
+                    'Portail détecté, regarde bien.',
+
+                    'Un nouveau vortex s’ouvre.',
+
+                    'Un Morty de plus à récupérer.'
+                ],
+
+                hit: [
+
+                    'Bien joué.',
+
+                    'Voilà.',
+
+                    'Continue comme ça.',
+
+                    'Parfait.'
+                ],
+
+                miss: [
+
+                    'Raté, on reprend.',
+
+                    'Pas la bonne direction.',
+
+                    'Oups, recommence.'
+                ],
+
+                success: [
+
+                    'Portail fermé !',
+
+                    'Morty récupéré.',
+
+                    'Un de plus dans la boîte.'
+                ],
+
+                fail: [
+
+                    'Le portail résiste.',
+
+                    'On retente.'
+                ]
+
+            };
+
+            const pick =
+                arr =>
+                    arr[
+                    Math.floor(
+                        Math.random() *
+                        arr.length
+                    )
+                    ];
+
+            function wait(ms) {
+
+                return new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            ms
+                        )
+                );
+
+            }
+
+            function renderLives() {
+
+                el.lives.innerHTML =
+                    '';
+
+                for (
+                    let i = 0;
+                    i < 3;
+                    i++
+                ) {
+
+                    const life =
+                        document.createElement(
+                            'span'
+                        );
+
+                    life.className =
+                        'life' +
+                        (
+                            i < lives
+                                ? ' on'
+                                : ''
+                        );
+
+                    el.lives.appendChild(
+                        life
+                    );
+
+                }
+
+            }
+
+            function renderScore() {
+
+                el.score.textContent =
+                    'Portails fermés : ' +
+                    score;
+
+            }
+
+            function arrowIcon(dir) {
+
+                const wrap =
+                    document.createElement(
+                        'div'
+                    );
+
+                wrap.className =
+                    'arrow';
+
+                wrap.dataset.dir =
+                    dir;
+
+                wrap.innerHTML = `
+
+            <svg
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+            >
+
+                <path
+                    d="${ARROW_PATHS[dir]}"
+                ></path>
+
+            </svg>
+
+        `;
+
+                return wrap;
+
+            }
+
+            function buildSequence(
+                length
+            ) {
+
+                round =
+                    Array.from(
+                        {
+                            length
+                        },
+                        () =>
+                            DIRS[
+                            Math.floor(
+                                Math.random() *
+                                DIRS.length
+                            )
+                            ]
+                    );
+
+                el.sequence.innerHTML =
+                    '';
+
+                round.forEach(
+                    dir => {
+
+                        el.sequence.appendChild(
+                            arrowIcon(dir)
+                        );
+
+                    }
+                );
+
+            }
+
+            function sequenceLength() {
+
+                return Math.min(
+
+                    3 +
+                    Math.floor(
+                        score / 2
+                    ),
+
+                    8
+                );
+
+            }
+
+            async function startDetection() {
+
+                if (detectionRunning) {
+                    return;
+                }
+
+                detectionRunning =
+                    true;
+
+                phase =
+                    'detection';
+
+                el.game.classList.add(
+                    'active'
+                );
+
+                el.game.classList.remove(
+                    'playing',
+                    'cinematic',
+                    'detecting'
+                );
+
+                el.sequence.classList.remove(
+                    'visible'
+                );
+
+                el.roundMsg.classList.remove(
+                    'visible',
+                    'ok',
+                    'fail'
+                );
+
+                const response =
+                    pick(
+                        LINES.detection
+                    );
+
+                el.roundMsg.textContent =
+                    response;
+
+                el.roundMsg.classList.add(
+                    'visible'
+                );
+
+                if (window.Avatar) {
+
+                    Avatar.setEmotion(
+                        'thinking'
+                    );
+
+                    Avatar.setState(
+                        'speaking'
+                    );
+
+                    Avatar.caption(
+                        response
+                    );
+
+                }
+
+                await wait(
+                    1200
+                );
+
+                phase =
+                    'cinematic';
+
+                el.game.classList.add(
+                    'cinematic',
+                    'detecting'
+                );
+
+                if (window.Avatar) {
+
+                    Avatar.setEmotion(
+                        'thinking'
+                    );
+
+                    Avatar.setState(
+                        'speaking'
+                    );
+
+                    Avatar.caption(
+                        'Détection des Morty en cours…'
+                    );
+
+                }
+
+                await wait(
+                    1400
+                );
+
+                el.game.classList.remove(
+                    'detecting',
+                    'cinematic'
+                );
+
+                detectionRunning =
+                    false;
+
+                await playRound();
+
+            }
+
+            async function playRound() {
+
+                phase =
+                    'reveal';
+
+                step =
+                    0;
+
+                buildSequence(
+                    sequenceLength()
+                );
+
+                el.sequence.classList.add(
+                    'visible'
+                );
+
+                el.roundMsg.classList.add(
+                    'visible'
+                );
+
+                el.roundMsg.classList.remove(
+                    'ok',
+                    'fail'
+                );
+
+                const message =
+                    pick(
+                        LINES.start
+                    );
+
+                el.roundMsg.textContent =
+                    message;
+
+                if (window.Avatar) {
+
+                    Avatar.setEmotion(
+                        'thinking'
+                    );
+
+                    Avatar.setState(
+                        'speaking'
+                    );
+
+                    Avatar.caption(
+                        message
+                    );
+
+                }
+
+                const cells =
+                    [
+                        ...el.sequence.children
+                    ];
+
+                for (
+                    const cell
+                    of cells
+                ) {
+
+                    cell.classList.remove(
+                        'hit',
+                        'miss'
+                    );
+
+                    cell.classList.add(
+                        'lit'
+                    );
+
+                    await wait(
+                        420
+                    );
+
+                    cell.classList.remove(
+                        'lit'
+                    );
+
+                    await wait(
+                        160
+                    );
+
+                }
+
+                phase =
+                    'input';
+
+                el.game.classList.add(
+                    'playing'
+                );
+
+                if (window.Avatar) {
+
+                    Avatar.setEmotion(
+                        'neutral'
+                    );
+
+                    Avatar.setState(
+                        'listening'
+                    );
+
+                    Avatar.caption(
+                        'À toi.'
+                    );
+
+                }
+
+                el.roundMsg.textContent =
+                    'À toi de rejouer la séquence.';
+
+            }
+
+            function handleDirection(dir) {
+
+                if (
+                    phase !== 'input'
+                ) {
+
+                    return;
+                }
+
+                const cell =
+                    el.sequence.children[
+                    step
+                    ];
+
+                const expected =
+                    round[
+                    step
+                    ];
+
+                if (
+                    dir === expected
+                ) {
+
+                    cell.classList.add(
+                        'hit'
+                    );
+
+                    if (window.Avatar) {
+
+                        Avatar.setEmotion(
+                            'happy'
+                        );
+
+                        Avatar.caption(
+                            pick(
+                                LINES.hit
+                            )
+                        );
+
+                    }
+
+                    step++;
+
+                    if (
+                        step >=
+                        round.length
+                    ) {
+
+                        resolveRound(
+                            true
+                        );
+
+                    }
+
+                } else {
+
+                    cell.classList.add(
+                        'miss'
+                    );
+
+                    if (window.Avatar) {
+
+                        Avatar.setEmotion(
+                            'surprised'
+                        );
+
+                        Avatar.caption(
+                            pick(
+                                LINES.miss
+                            )
+                        );
+
+                    }
+
+                    resolveRound(
+                        false
+                    );
+
+                }
+
+            }
+
+            function resolveRound(
+                success
+            ) {
+
+                phase =
+                    'resolved';
+
+                if (success) {
+
+                    score++;
+
+                    renderScore();
+
+                    el.roundMsg.classList.add(
+                        'visible',
+                        'ok'
+                    );
+
+                    el.roundMsg.classList.remove(
+                        'fail'
+                    );
+
+                    const message =
+                        pick(
+                            LINES.success
+                        );
+
+                    el.roundMsg.textContent =
+                        message;
+
+                    if (window.Avatar) {
+
+                        Avatar.setEmotion(
+                            'happy'
+                        );
+
+                        Avatar.setState(
+                            'speaking'
+                        );
+
+                        Avatar.caption(
+                            message
+                        );
+
+                    }
+
+                    if (hardwareBridge) {
+
+                        hardwareBridge(
+                            'close-portal'
+                        );
+
+                    }
+
+                    el.vortex.classList.add(
+                        'closing'
+                    );
+
+                    el.morty.classList.add(
+                        'gone'
+                    );
+
+                    setTimeout(
+                        () => {
+
+                            el.vortex.classList.remove(
+                                'closing'
+                            );
+
+                            el.morty.classList.remove(
+                                'gone'
+                            );
+
+                            if (window.Avatar) {
+
+                                Avatar.setState(
+                                    'idle'
+                                );
+
+                            }
+
+                            playRound();
+
+                        },
+                        1200
+                    );
+
+                } else {
+
+                    lives =
+                        Math.max(
+                            0,
+                            lives - 1
+                        );
+
+                    renderLives();
+
+                    el.roundMsg.classList.add(
+                        'visible',
+                        'fail'
+                    );
+
+                    el.roundMsg.classList.remove(
+                        'ok'
+                    );
+
+                    const message =
+                        pick(
+                            LINES.fail
+                        );
+
+                    el.roundMsg.textContent =
+                        message;
+
+                    if (window.Avatar) {
+
+                        Avatar.setEmotion(
+                            'angry'
+                        );
+
+                        Avatar.setState(
+                            'speaking'
+                        );
+
+                        Avatar.caption(
+                            message
+                        );
+
+                    }
+
+                    setTimeout(
+                        () => {
+
+                            if (window.Avatar) {
+
+                                Avatar.setState(
+                                    'idle'
+                                );
+
+                            }
+
+                            if (
+                                lives <= 0
+                            ) {
+
+                                lives =
+                                    3;
+
+                                score =
+                                    0;
+
+                                renderLives();
+
+                                renderScore();
+
+                            }
+
+                            playRound();
+
+                        },
+                        1100
+                    );
+
+                }
+
+            }
+
+            window.addEventListener(
+                'keydown',
+                e => {
+
+                    const dir =
+                        KEY_MAP[
+                        e.key
+                        ];
+
+                    if (!dir) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    handleDirection(
+                        dir
+                    );
+
+                }
+            );
+
+            let gpNeutral =
+                true;
+
+            function pollGamepad() {
+
+                const pads =
+                    navigator.getGamepads
+                        ? navigator.getGamepads()
+                        : [];
+
+                const pad =
+                    pads &&
+                    pads[0];
+
+                if (pad) {
+
+                    const x =
+                        pad.axes[0] ||
+                        0;
+
+                    const y =
+                        pad.axes[1] ||
+                        0;
+
+                    const THRESH =
+                        0.55;
+
+                    let dir =
+                        null;
+
+                    if (
+                        Math.abs(x) >
+                        Math.abs(y)
+                    ) {
+
+                        if (
+                            x > THRESH
+                        ) {
+
+                            dir =
+                                'right';
+
+                        } else if (
+                            x < -THRESH
+                        ) {
+
+                            dir =
+                                'left';
+
+                        }
+
+                    } else {
+
+                        if (
+                            y > THRESH
+                        ) {
+
+                            dir =
+                                'down';
+
+                        } else if (
+                            y < -THRESH
+                        ) {
+
+                            dir =
+                                'up';
+
+                        }
+
+                    }
+
+                    if (
+                        dir &&
+                        gpNeutral
+                    ) {
+
+                        gpNeutral =
+                            false;
+
+                        handleDirection(
+                            dir
+                        );
+
+                    } else if (!dir) {
+
+                        gpNeutral =
+                            true;
+                    }
+
+                }
+
+                requestAnimationFrame(
+                    pollGamepad
+                );
+
+            }
+
+            requestAnimationFrame(
+                pollGamepad
+            );
+
+            window.Game = {
+
+                startDetection,
+
+                setHardwareBridge(fn) {
+
+                    hardwareBridge =
+                        fn;
+                },
+
+                isPlaying() {
+
+                    return (
+                        phase === 'input'
+                    );
+                },
+
+                isDetecting() {
+
+                    return detectionRunning;
+                }
+
+            };
+
+            renderLives();
+
+            renderScore();
+
+            if (window.Avatar) {
+
+                Avatar.setEmotion(
+                    'neutral'
+                );
+
+                Avatar.setState(
+                    'idle'
+                );
+
+                Avatar.caption(
+                    ''
+                );
+
+            }
+
+        })();
+
+    </script>
+
+</body>
+
+</html>
